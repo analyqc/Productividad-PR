@@ -28,7 +28,8 @@ open class JiraExcelDAO: JiraDAO {
         "idClave" to (table.findColumnIndex("Clave")),
         "idTipoIncidencia" to (table.findColumnIndex("Tipo de Incidencia")),
         "idEstado" to (table.findColumnIndex("Estado")),
-        "idFecha" to (table.findColumnIndex("Fecha en TERMINADO"))
+        "idFecha" to (table.findColumnIndex("Fecha en TERMINADO")),
+        "responsable" to (table.findColumnIndex("Responsable.emailAddress"))
     )
 
     //TODO CONSUMO DE INTERFAZ
@@ -41,7 +42,7 @@ open class JiraExcelDAO: JiraDAO {
             val clave = getClave(row, positions["idClave"]!!)
             val tipoincidencia = getTipoIncidencia(row, positions["idTipoIncidencia"]!!)
             val estado = getEstado(row, positions["idEstado"]!!)
-
+            val responsable = getResponsable(row, positions["responsable"]!!)
             val fechaCell = row.getCell(positions["idFecha"]!!)
             var fechaTerminado = ""
 
@@ -65,7 +66,7 @@ open class JiraExcelDAO: JiraDAO {
                 throw IllegalArgumentException("estado")
             }
 
-            val issue = Issue(clave, tipoincidencia, estado, fechaTerminado)
+            val issue = Issue(clave, tipoincidencia, estado, fechaTerminado,responsable)
             issues.add(issue)
         }
 
@@ -92,6 +93,20 @@ open class JiraExcelDAO: JiraDAO {
         row: XSSFRow,
         position: Int
     ): String? = row.getCell(position).stringCellValue
+
+    fun getResponsable(
+        row: XSSFRow,
+        position: Int
+    ): String{
+        var user=""
+        if(row.getCell(position)==null){
+            user=""
+        }else{
+            user=row.getCell(position).stringCellValue
+        }
+        return user
+    }
+
 
     fun formatLocalDateTime(localDateTime: LocalDateTime): String {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

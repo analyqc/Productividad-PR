@@ -7,23 +7,44 @@ class RepositoryController(private val repositoryDAO: Repository) {
 
     fun repositoryExcel():String {
         val repository = repositoryDAO.getRepository()
-        val repositoryGitHub = getRepositoryGitHub(repository)
-
-        return exportarFiltradosDelGitHub(repositoryGitHub)
+        return exportarFiltradosDelGitHub(repository)
     }
 
-    private fun getRepositoryGitHub(repository: List<RepositoryGIT>): List<RepositoryGIT> {
-        val repFiltrado = repository.filter {
-            it.UserStory.isNotBlank()
+    private fun exportarFiltradosDelGitHub(repositoryFiltrado: List<RepositoryGIT>): String {
+
+        val repFiltrado = repositoryFiltrado.filter {
+            it.branch.equals("develop", ignoreCase = true)&&
+                    it.PRMerge.isNotBlank()
         }
-        return repFiltrado
+        val emailCountMap = mutableMapOf<String, Int>()
+
+        for (issue in repFiltrado) {
+            emailCountMap[issue.email] = emailCountMap.getOrDefault(issue.email, 0) + 1
+        }
+
+
+        val repFiltradoDesing = repositoryFiltrado.filter {
+            it.branch.equals("develop", ignoreCase = true)&&
+                    it.PRMerge.isNotBlank() &&
+                    !it.repository.matches(Regex(".*-de?si?gn?-.*", RegexOption.IGNORE_CASE))
+        }
+        val emailCountMapDesing = mutableMapOf<String, Int>()
+        for (issue in repFiltradoDesing) {
+            emailCountMapDesing[issue.email] = emailCountMapDesing.getOrDefault(issue.email, 0) + 1
+        }
+
+        val uniqueEmails = emailCountMap.keys.toSet()
+        val uniqueEmailsDesing = emailCountMapDesing.keys.toSet()
+
+        val filtradoGitHub = StringBuilder()
+
+        for (email in uniqueEmails+uniqueEmailsDesing ) {
+            val totalTareas = emailCountMap.getOrDefault(email, 0)
+            val totalHistorias = emailCountMapDesing.getOrDefault(email, 0)
+            filtradoGitHub.append("- Cantidad de HU: $totalTareas \t -Total PR: $totalHistorias \t -Email: $email \n")
+        }
+
+        return filtradoGitHub.toString()
     }
 
-    private fun exportarFiltradosDelGitHub (repositoryFiltrado: List<RepositoryGIT>): String {
-        var FiltradoDelGithub=""
-        for (issue in repositoryFiltrado) {
-            FiltradoDelGithub+="Email: ${issue.email} - PRNumber:${issue.PRNumber} - Usuario: ${issue.UserStory}\n"
-        }
-        return FiltradoDelGithub
-    }
 }

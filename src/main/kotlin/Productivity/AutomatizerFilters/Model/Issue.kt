@@ -4,5 +4,7 @@ data class Issue(
     val clave: String,
     val tipoincidencia: String,
     val estado: String,
-    val fechaTerminado: String
+    val fechaTerminado: String,
+    val responsable:String
+
 )

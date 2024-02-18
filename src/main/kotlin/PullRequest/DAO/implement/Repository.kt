@@ -19,8 +19,8 @@ open class Repository: RepositoryDAO {
     val tables: List<XSSFTable> = sheet.tables
 
     val table = workbook.getTable("GHReportes")
-    val iniTable = table.startRowIndex + 1
-    val endTable = table.endRowIndex
+    private val iniTable = table.startRowIndex + 1
+    private val endTable = table.endRowIndex
 
     val positions: Map<String, Int> = mapOf(
         "email" to (table.findColumnIndex("Email")),

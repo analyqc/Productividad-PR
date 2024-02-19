@@ -1,6 +1,5 @@
 package PullRequest.Controller
 
-import Productivity.AutomatizerFilters.Model.IssueExcel
 import PullRequest.DAO.implement.Repository
 import PullRequest.Model.RepositoryExcel
 import PullRequest.Model.RepositoryGIT
@@ -15,7 +14,6 @@ class RepositoryController(private val repositoryDAO: Repository) {
         val filtradoPR= exportarFiltradosDelGitHub(repository)
         excelGeneratorPR.generarExcel(filtradoPR, rutaArchivo)
     }
-
 
     private fun exportarFiltradosDelGitHub(repositoryFiltrado: List<RepositoryGIT>): List<RepositoryExcel> {
         val repFiltrado = repositoryFiltrado.filter {

@@ -1,49 +1,51 @@
 package AutomatizerFilters.Controller
 
 import AutomatizerFilters.Model.Issue
+import ExcelGenerator
+import Productivity.AutomatizerFilters.Model.IssueExcel
 import Productivity.AutomatizerFilters.DAO.JiraDAO
 
 class ProductividadController(val jiraDAO: JiraDAO){
-    fun productividadExcel():String {
+
+    private val excelGenerator = ExcelGenerator()
+    fun productividadExcel(rutaArchivo: String) {
         val issues = jiraDAO.getIssues()
-        return exportarIssuesDelPeriodo(issues)
+        val filtradoIssuesPeriodo = exportarIssuesDelPeriodo(issues)
+        excelGenerator.generarExcel(filtradoIssuesPeriodo, rutaArchivo)
     }
 
-   private fun exportarIssuesDelPeriodo (issuesFiltrado: List<Issue>): String {
+    private fun exportarIssuesDelPeriodo(issuesFiltrado: List<Issue>): List<IssueExcel> {
+        val contadorDeTareas = mutableMapOf<String, Int>()
+        val contadorDeHistorias = mutableMapOf<String, Int>()
 
-       val repFiltradoTarea = issuesFiltrado.filter {
-           it.fechaTerminado.matches("\\d{2}/06/2023".toRegex()) &&
-           it.tipoincidencia.equals("Tarea", ignoreCase = true)
-       }
+        val repFiltradoTarea = issuesFiltrado.filter {
+            it.fechaTerminado.matches("\\d{2}/06/2023".toRegex()) &&
+                    it.tipoincidencia.equals("Tarea", ignoreCase = true)
+        }
+        for (issue in repFiltradoTarea) {
+            contadorDeTareas[issue.responsable] = contadorDeTareas.getOrDefault(issue.responsable, 0) + 1
+        }
 
-       val contadorDeTareas = mutableMapOf<String, Int>()
-       for (issue in repFiltradoTarea) {
-           contadorDeTareas[issue.responsable] = contadorDeTareas.getOrDefault(issue.responsable, 0) + 1
-       }
+        val repFiltradoHistoria = issuesFiltrado.filter {
+            it.fechaTerminado.matches("\\d{2}/06/2023".toRegex()) &&
+                    it.tipoincidencia.equals("Historia", ignoreCase = true)
+        }
+        for (issue in repFiltradoHistoria) {
+            contadorDeHistorias[issue.responsable] = contadorDeHistorias.getOrDefault(issue.responsable, 0) + 1
+        }
 
-       val repFiltradoHistoria = issuesFiltrado.filter {
-           it.fechaTerminado.matches("\\d{2}/06/2023".toRegex()) &&
-                   it.tipoincidencia.equals("Historia", ignoreCase = true)
-       }
+        val  uniqueEncargadoTareas= contadorDeTareas.keys.toSet()
+        val  uniqueEncargadoHistorias= contadorDeHistorias.keys.toSet()
 
-       val contadorDeHistorias = mutableMapOf<String, Int>()
-       for (issue in repFiltradoHistoria) {
-           contadorDeHistorias[issue.responsable] = contadorDeHistorias.getOrDefault(issue.responsable, 0) + 1
-       }
+        val issuesExcel = mutableListOf<IssueExcel>()
 
-       val  uniqueEncargadoTareas= contadorDeTareas.keys.toSet()
-       val  uniqueEncargadoHistorias= contadorDeHistorias.keys.toSet()
+        for (encargado in uniqueEncargadoTareas+uniqueEncargadoHistorias) {
+            val totalTareas = contadorDeTareas.getOrDefault(encargado, 0)
+            val totalHistorias = contadorDeHistorias.getOrDefault(encargado, 0)
 
-       val filtradoIssuesPeriodo = StringBuilder()
+            issuesExcel.add(IssueExcel(encargado, totalTareas, totalHistorias))
+        }
 
-       for (encargado in uniqueEncargadoTareas+uniqueEncargadoHistorias) {
-
-           val totalTareas = contadorDeTareas.getOrDefault(encargado, 0)
-           val totalHistorias = contadorDeHistorias.getOrDefault(encargado, 0)
-
-           filtradoIssuesPeriodo.append("-Total de tareas: $totalTareas \t -Total de historias: $totalHistorias \t -Encargado: $encargado\n")
-       }
-
-       return filtradoIssuesPeriodo.toString()
-   }
+        return issuesExcel
+    }
 }

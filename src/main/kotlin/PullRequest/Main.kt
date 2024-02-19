@@ -6,5 +6,5 @@ import PullRequest.DAO.implement.Repository
 fun main() {
         val repository = Repository()
         val properFile = RepositoryController(repository)
-        println(properFile.repositoryExcel())
+        println(properFile.repositoryExcel("D://PRInforme.xlsx"))
 }

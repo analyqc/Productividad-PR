@@ -1,17 +1,17 @@
 package AutomatizerFilters.Controller
 
 import AutomatizerFilters.Model.Issue
-import ExcelGenerator
+import ExcelGeneratorProductividad
 import Productivity.AutomatizerFilters.Model.IssueExcel
 import Productivity.AutomatizerFilters.DAO.JiraDAO
 
 class ProductividadController(val jiraDAO: JiraDAO){
 
-    private val excelGenerator = ExcelGenerator()
+    private val excelGeneratorProductividad = ExcelGeneratorProductividad()
     fun productividadExcel(rutaArchivo: String) {
         val issues = jiraDAO.getIssues()
         val filtradoIssuesPeriodo = exportarIssuesDelPeriodo(issues)
-        excelGenerator.generarExcel(filtradoIssuesPeriodo, rutaArchivo)
+        excelGeneratorProductividad.generarExcel(filtradoIssuesPeriodo, rutaArchivo)
     }
 
     private fun exportarIssuesDelPeriodo(issuesFiltrado: List<Issue>): List<IssueExcel> {
@@ -30,6 +30,7 @@ class ProductividadController(val jiraDAO: JiraDAO){
             it.fechaTerminado.matches("\\d{2}/06/2023".toRegex()) &&
                     it.tipoincidencia.equals("Historia", ignoreCase = true)
         }
+
         for (issue in repFiltradoHistoria) {
             contadorDeHistorias[issue.responsable] = contadorDeHistorias.getOrDefault(issue.responsable, 0) + 1
         }

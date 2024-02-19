@@ -24,13 +24,12 @@ class FunctionsRepository {
         row: XSSFRow,
         position: Int
     ): String{
-        var user=""
-        if(row.getCell(position)==null){
-            user=""
-        }else{
-            user=row.getCell(position).stringCellValue
+        val cell = row.getCell(position)
+        return if (cell == null || cell.stringCellValue.isNullOrBlank()) {
+            "VACIO"
+        } else {
+            cell.stringCellValue
         }
-        return user
     }
 
     fun getPRNumber(
@@ -49,5 +48,6 @@ class FunctionsRepository {
         row: XSSFRow,
         position: Int
     ):Int = row.getCell(position).numericCellValue.toInt()
+
 
 }

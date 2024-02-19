@@ -2,7 +2,7 @@ import Productivity.AutomatizerFilters.Model.IssueExcel
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileOutputStream
 
-class ExcelGenerator {
+class ExcelGeneratorProductividad {
     fun generarExcel(issues: List<IssueExcel>, rutaArchivo: String) {
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet("Issues Periodo")

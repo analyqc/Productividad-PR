@@ -1,13 +1,22 @@
 package PullRequestCSV.Controller
 
-import PullRequestCSV.DAO.CsvDAO
+import PullRequestCSV.DAO.PullRequestDAO
 import PullRequestCSV.Model.CsvPullRequest
 
-class ReadPRController(private val csvDAO: CsvDAO) {
+class ProductividadController(private val pullRequestDAO: PullRequestDAO) {
 
-    fun repositoryExcel(): String {
-        val repository = csvDAO.getCsvPullRequest()
-        return exportarFiltradosDelGitHub(repository)
+    fun exportMetricas(): String {
+        //TODO 1 exportar consolidado PullRequest
+
+        val pullRequests = pullRequestDAO.getPullRequests()
+
+        //TODO 2 exportar consolidado JIRA
+        //TODO 3 Filtrar PR (PullRequest) E Issues (JIRA)
+        //TODO 4 Combinar listado de PR e Issues
+        //TODO 5 Calcular métrica PR/HU
+        //TODO 6 Calcular métrica Revisiones/PR
+        //TODO 7 Exportar métricas
+        return exportarFiltradosDelGitHub(pullRequests)
     }
 
     private fun exportarFiltradosDelGitHub(repositoryFiltrado: List<CsvPullRequest>): String {
@@ -25,8 +34,8 @@ class ReadPRController(private val csvDAO: CsvDAO) {
         return filtradoGitHub.toString()
     }
 
-//    fun repositoryExcel(rutaArchivo: String) {
-//        val repository = csvDAO.getCsvPullRequest()
+//    fun exportMetricas(rutaArchivo: String) {
+//        val repository = csvDAO.getPullRequests()
 //        val filtradoPR= exportarFiltradosDelGitHub(repository)
 //        excelGeneratorPR.generarExcel(filtradoPR, rutaArchivo)
 //    }

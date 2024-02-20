@@ -17,6 +17,7 @@ dependencies {
     testImplementation("io.cucumber:cucumber-junit:7.8.1")
     testImplementation ("org.mockito:mockito-inline:2.13.0")
     testImplementation("org.mockito:mockito-core:4.9.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-csv:0.20.0")
 }
 
 tasks.test {

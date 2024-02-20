@@ -1,13 +1,12 @@
 package PullRequest.Controller
 
-import PullRequest.DAO.implement.Repository
+import PullRequest.DAO.RepositoryDAO
 import PullRequest.Model.RepositoryExcel
 import PullRequest.Model.RepositoryGIT
 
-class RepositoryController(private val repositoryDAO: Repository) {
+class RepositoryController(private val repositoryDAO: RepositoryDAO) {
 
     private val excelGeneratorPR = ExcelGeneratorPR()
-
 
     fun repositoryExcel(rutaArchivo: String) {
         val repository = repositoryDAO.getRepository()

@@ -69,51 +69,35 @@ open class PullRequestCSVDAO: PullRequestDAO {
     fun ConsolidarCSV() {
         val pullrequests = leerPullRequestDeCSV()
 
-        val pullRequestIdentificador = mutableMapOf<Int, CsvPullRequest>()
+        val recientePullRequest = mutableMapOf<Int, CsvPullRequest>()
 
         for (pullrequest in pullrequests) {
-            val ordenarPullRequestId = pullRequestIdentificador[pullrequest.Id]
+            val ordenarPullRequestId = recientePullRequest[pullrequest.Id]
 
             if (ordenarPullRequestId == null || LocalDate.parse(pullrequest.Origen, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 > LocalDate.parse(ordenarPullRequestId.Origen, DateTimeFormatter.ofPattern("dd/MM/yyyy"))) {
-                pullRequestIdentificador[pullrequest.Id] = pullrequest
+                recientePullRequest[pullrequest.Id] = pullrequest
             }
         }
 
-        val latestPullRequests = pullRequestIdentificador.values.sortedBy {it.Id}
-
+        val latestPullRequests = recientePullRequest.values.sortedBy {it.Id}
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet("DATA")
 
         generarCabecera(sheet)
+        generarCuerpo(sheet,latestPullRequests)
 
-        var rowNum = 1
-        for (pullrequest in latestPullRequests) {
-            val row = sheet.createRow(rowNum++)
-            row.createCell(0).setCellValue(pullrequest.Username)
-            row.createCell(1).setCellValue(pullrequest.Email)
-            row.createCell(2).setCellValue(pullrequest.Repository)
-            row.createCell(3).setCellValue(pullrequest.Branch)
-            row.createCell(4).setCellValue(pullrequest.UserStory)
-            row.createCell(5).setCellValue(pullrequest.PRNumber.toDouble())
-            row.createCell(6).setCellValue(pullrequest.PRTitle)
-            row.createCell(7).setCellValue(pullrequest.PRState)
-            row.createCell(8).setCellValue(pullrequest.PRCreated)
-            row.createCell(9).setCellValue(pullrequest.PRMerged)
-            row.createCell(10).setCellValue(pullrequest.PRClosed)
-            row.createCell(11).setCellValue(pullrequest.Id.toDouble())
-            row.createCell(12).setCellValue(pullrequest.PRReviewers.toDouble())
-            row.createCell(13).setCellValue(pullrequest.Origen)
-        }
         FileOutputStream("D:\\PullRequest\\ReadPullRequest.xlsx").use { outputStream ->
             workbook.write(outputStream)
         }
     }
 
     fun importarXLSConsolidado(): List<CsvPullRequest> {
-        val pullRequestXLS = mutableListOf<CsvPullRequest>()
-        val rutaDelArchivo = FileInputStream("D:\\PullRequest\\ReadPullRequest.xlsx")
-        val workbook = WorkbookFactory.create(rutaDelArchivo)
+        val filePath="D:\\PullRequest\\ReadPullRequest.xlsx"
+        val dataList = mutableListOf<CsvPullRequest>()
+
+        val excelFile = FileInputStream(filePath)
+        val workbook = WorkbookFactory.create(excelFile)
         val sheet = workbook.getSheetAt(0)
 
         for (rowNum in 1 until sheet.physicalNumberOfRows) {
@@ -134,12 +118,13 @@ open class PullRequestCSVDAO: PullRequestDAO {
                 PRReviewers = row.getCell(12).numericCellValue.toInt(),
                 Origen = row.getCell(13).stringCellValue,
             )
-            pullRequestXLS.add(csvPullRequest)
+            dataList.add(csvPullRequest)
         }
-        workbook.close()
-        rutaDelArchivo.close()
 
-        return pullRequestXLS
+        workbook.close()
+        excelFile.close()
+
+        return dataList
     }
 
     private fun convertirOrigenAFecha(numeroOrigen: Int): String {
@@ -165,5 +150,28 @@ open class PullRequestCSVDAO: PullRequestDAO {
         headerRow.createCell(11).setCellValue("Id")
         headerRow.createCell(12).setCellValue("PR Reviewers")
         headerRow.createCell(13).setCellValue("Origen")
+    }
+
+    fun generarCuerpo(sheet: XSSFSheet, latestPullRequests: List<CsvPullRequest>){
+        var rowNum = 1
+
+        for (pullrequest in latestPullRequests) {
+            val row = sheet.createRow(rowNum++)
+            row.createCell(0).setCellValue(pullrequest.Username)
+            row.createCell(1).setCellValue(pullrequest.Email)
+            row.createCell(2).setCellValue(pullrequest.Repository)
+            row.createCell(3).setCellValue(pullrequest.Branch)
+            row.createCell(4).setCellValue(pullrequest.UserStory)
+            row.createCell(5).setCellValue(pullrequest.PRNumber.toDouble())
+            row.createCell(6).setCellValue(pullrequest.PRTitle)
+            row.createCell(7).setCellValue(pullrequest.PRState)
+            row.createCell(8).setCellValue(pullrequest.PRCreated)
+            row.createCell(9).setCellValue(pullrequest.PRMerged)
+            row.createCell(10).setCellValue(pullrequest.PRClosed)
+            row.createCell(11).setCellValue(pullrequest.Id.toDouble())
+            row.createCell(12).setCellValue(pullrequest.PRReviewers.toDouble())
+            row.createCell(13).setCellValue(pullrequest.Origen)
+        }
+
     }
 }

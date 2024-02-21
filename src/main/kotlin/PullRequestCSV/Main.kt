@@ -4,7 +4,7 @@ import PullRequest.DAO.implement.PullRequestCSVDAO
 import PullRequestCSV.Controller.ProductividadController
 
 fun main() {
-    val pullrequestDao = PullRequestCSVDAO()
-    val controller = ProductividadController(pullrequestDao)
+    val pullrequestDAO = PullRequestCSVDAO()
+    val controller = ProductividadController(pullrequestDAO)
     controller.exportMetricas()
 }

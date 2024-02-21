@@ -14,5 +14,5 @@ data class CsvPullRequest(
     val PRClosed: String,
     val Id: Int,
     val PRReviewers: Int,
-    val Origen:Int=0
+    val Origen: String
 )

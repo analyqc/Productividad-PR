@@ -8,6 +8,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 open class PullRequestCSVDAO: PullRequestDAO {
     fun leerPullRequestDeCSV(): List<CsvPullRequest> {
@@ -31,6 +33,9 @@ open class PullRequestCSVDAO: PullRequestDAO {
             if (!csvFile.exists()) {
                 println("El archivo $inputPath no existe.")
             }
+            val nombreArchivo = csvFile.nameWithoutExtension
+            val numeroArchivo = nombreArchivo.substringAfterLast("_").substringBeforeLast(".").toIntOrNull()
+            val numero2= convertirOrigenAFecha(numeroArchivo ?: 0)
 
             csvFile.bufferedReader().useLines { lines ->
                 lines.drop(1)
@@ -50,7 +55,7 @@ open class PullRequestCSVDAO: PullRequestDAO {
                             PRClosed = tokens[10],
                             Id = tokens[11].toIntOrNull() ?: 0,
                             PRReviewers = tokens[12].toIntOrNull() ?: 0,
-                            Origen = 0
+                            Origen = numero2
                         )
                         pullrequests.add(csvPullRequest)
                     }
@@ -58,14 +63,51 @@ open class PullRequestCSVDAO: PullRequestDAO {
         }
         return pullrequests
     }
-
     fun ConsolidarCSV() {
         val pullrequests = leerPullRequestDeCSV()
+
+        val recientePullRequest = mutableMapOf<Int, CsvPullRequest>()
+
+        for (pullrequest in pullrequests) {
+            val ordenarPullRequestId = recientePullRequest[pullrequest.Id]
+
+            if (ordenarPullRequestId == null || LocalDate.parse(pullrequest.Origen, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                > LocalDate.parse(ordenarPullRequestId.Origen, DateTimeFormatter.ofPattern("dd/MM/yyyy"))) {
+                recientePullRequest[pullrequest.Id] = pullrequest
+            }
+        }
+
+        val latestPullRequests = recientePullRequest.values.sortedBy {it.Id}
 
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet("DATA")
 
-        //generarCabecera(sheet)
+        generarCabecera(sheet)
+
+        var rowNum = 1
+        for (pullrequest in latestPullRequests) {
+            val row = sheet.createRow(rowNum++)
+            row.createCell(0).setCellValue(pullrequest.Username)
+            row.createCell(1).setCellValue(pullrequest.Email)
+            row.createCell(2).setCellValue(pullrequest.Repository)
+            row.createCell(3).setCellValue(pullrequest.Branch)
+            row.createCell(4).setCellValue(pullrequest.UserStory)
+            row.createCell(5).setCellValue(pullrequest.PRNumber.toDouble())
+            row.createCell(6).setCellValue(pullrequest.PRTitle)
+            row.createCell(7).setCellValue(pullrequest.PRState)
+            row.createCell(8).setCellValue(pullrequest.PRCreated)
+            row.createCell(9).setCellValue(pullrequest.PRMerged)
+            row.createCell(10).setCellValue(pullrequest.PRClosed)
+            row.createCell(11).setCellValue(pullrequest.Id.toDouble())
+            row.createCell(12).setCellValue(pullrequest.PRReviewers.toDouble())
+            row.createCell(13).setCellValue(pullrequest.Origen)
+        }
+        FileOutputStream("D:\\PullRequest\\ReadPullRequest.xlsx").use { outputStream ->
+            workbook.write(outputStream)
+        }
+    }
+
+    fun generarCabecera( sheet: XSSFSheet){
         val headerRow = sheet.createRow(0)
         headerRow.createCell(0).setCellValue("UserName")
         headerRow.createCell(1).setCellValue("Email")
@@ -81,39 +123,11 @@ open class PullRequestCSVDAO: PullRequestDAO {
         headerRow.createCell(11).setCellValue("Id")
         headerRow.createCell(12).setCellValue("PR Reviewers")
         headerRow.createCell(13).setCellValue("Origen")
-
-        var rowNum = 1
-        for (pullrequest in pullrequests) {
-            val row = sheet.createRow(rowNum++)
-            row.createCell(0).setCellValue(pullrequest.Username)
-            row.createCell(1).setCellValue(pullrequest.Email)
-            row.createCell(2).setCellValue(pullrequest.Repository)
-            row.createCell(3).setCellValue(pullrequest.Branch)
-            row.createCell(4).setCellValue(pullrequest.UserStory ?: "")
-            row.createCell(5).setCellValue(pullrequest.PRNumber.toDouble())
-            row.createCell(6).setCellValue(pullrequest.PRTitle)
-            row.createCell(7).setCellValue(pullrequest.PRState)
-            row.createCell(8).setCellValue(pullrequest.PRCreated)
-            row.createCell(9).setCellValue(pullrequest.PRMerged)
-            row.createCell(10).setCellValue(pullrequest.PRClosed)
-            row.createCell(11).setCellValue(pullrequest.Id.toDouble())
-            row.createCell(12).setCellValue(pullrequest.PRReviewers.toDouble())
-            row.createCell(13).setCellValue(pullrequest.Origen.toDouble())
-        }
-
-        FileOutputStream("D:\\PullRequest\\ReadPullRequest.xlsx").use { outputStream ->
-            workbook.write(outputStream)
-        }
     }
-
-//    fun generarCabecera( sheet: XSSFSheet){
-//
-//    }
 
     fun importarXLSConsolidado(): List<CsvPullRequest> {
         val filePath="D:\\PullRequest\\ReadPullRequest.xlsx"
         val dataList = mutableListOf<CsvPullRequest>()
-
         val excelFile = FileInputStream(filePath)
         val workbook = WorkbookFactory.create(excelFile)
         val sheet = workbook.getSheetAt(0)
@@ -134,15 +148,21 @@ open class PullRequestCSVDAO: PullRequestDAO {
                 PRClosed = row.getCell(10).stringCellValue,
                 Id = row.getCell(11).numericCellValue.toInt(),
                 PRReviewers = row.getCell(12).numericCellValue.toInt(),
-                Origen= row.getCell(13).numericCellValue.toInt(),
+                Origen = row.getCell(13).stringCellValue,
             )
             dataList.add(csvPullRequest)
         }
-
         workbook.close()
         excelFile.close()
 
         return dataList
+    }
+
+    private fun convertirOrigenAFecha(numeroOrigen: Int): String {
+        val dateString = numeroOrigen.toString().padStart(6, '0')
+        val formatter = DateTimeFormatter.ofPattern("ddMMyy")
+        val date = LocalDate.parse(dateString, formatter)
+        return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     }
 
     override fun getPullRequests(): List<CsvPullRequest> {

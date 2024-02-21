@@ -8,7 +8,6 @@ class ProductividadController(private val pullRequestDAO: PullRequestDAO) {
         //TODO 1 exportar consolidado PullRequest
         val consolidadoPullRequest=pullRequestDAO.getPullRequests()
 
-
         //TODO 2 exportar consolidado JIRA
 //        , private val jiraDAO : JiraDAO
 //        val consolidadoJira=jiraDAO.getJira()

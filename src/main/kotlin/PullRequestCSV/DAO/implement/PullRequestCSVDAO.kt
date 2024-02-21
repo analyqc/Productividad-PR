@@ -38,7 +38,7 @@ open class PullRequestCSVDAO: PullRequestDAO {
 
             val nombreArchivo = archivoCSV.nameWithoutExtension
             val numeroArchivo = nombreArchivo.substringAfterLast("_").substringBeforeLast(".").toIntOrNull()
-            val fechaArchivo= convertirOrigenAFecha(numeroArchivo ?: 0)
+            val fechaArchivo= convertirOrigenAFecha(numeroArchivo ?:0)
 
             archivoCSV.bufferedReader().useLines { lines ->
                 lines.drop(1)
@@ -67,8 +67,8 @@ open class PullRequestCSVDAO: PullRequestDAO {
         return pullrequests
     }
     fun ConsolidarCSV() {
-        val pullrequests = leerPullRequestDeCSV()
 
+        val pullrequests = leerPullRequestDeCSV()
         val recientePullRequest = mutableMapOf<Int, CsvPullRequest>()
 
         for (pullrequest in pullrequests) {
@@ -107,7 +107,7 @@ open class PullRequestCSVDAO: PullRequestDAO {
                 Email = row.getCell(1).stringCellValue,
                 Repository = row.getCell(2).stringCellValue,
                 Branch = row.getCell(3).stringCellValue,
-                UserStory = row.getCell(4)?.stringCellValue ?: "",
+                UserStory = row.getCell(4).stringCellValue,
                 PRNumber = row.getCell(5).numericCellValue.toInt(),
                 PRTitle = row.getCell(6).stringCellValue,
                 PRState = row.getCell(7).stringCellValue,

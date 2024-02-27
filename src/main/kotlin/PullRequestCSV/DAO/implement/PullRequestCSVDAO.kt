@@ -27,7 +27,8 @@ open class PullRequestCSVDAO: PullRequestDAO {
             "D:\\Documentos\\PullRequest_150124.0620.csv",
             "D:\\Documentos\\PullRequest_190224.0634.csv",
             "D:\\Documentos\\PullRequest_220124.0754.csv",
-            "D:\\Documentos\\PullRequest_290124.0821.csv"
+            "D:\\Documentos\\PullRequest_290124.0821.csv",
+            "D:\\Documentos\\PullRequest_260224.0748.csv"
         )
 
         val pullrequests = ArrayList<PullRequests>()
@@ -77,13 +78,13 @@ open class PullRequestCSVDAO: PullRequestDAO {
         generarCabecera(sheet)
         generarCuerpo(sheet,latestPullRequests)
 
-        FileOutputStream("D:\\PullRequest\\ReadPullRequest.xlsx").use { outputStream ->
+        FileOutputStream("D:\\PullRequestIssue\\PullRequest.xlsx").use { outputStream ->
             workbook.write(outputStream)
         }
     }
 
     fun importarXLSConsolidado(): List<PullRequests> {
-        val filePath="D:\\PullRequest\\ReadPullRequest.xlsx"
+        val filePath="D:\\PullRequestIssue\\PullRequest.xlsx"
 
         val pullrequest = mutableListOf<PullRequests>()
 

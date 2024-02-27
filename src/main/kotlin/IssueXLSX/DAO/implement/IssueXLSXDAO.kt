@@ -20,7 +20,6 @@ open class IssueXLSXDAO : IssueDAO {
     fun leerIssueDeExcel(): List<Issue> {
         val issue = mutableListOf<Issue>()
         val filePath = "D:\\BBDDJira.xlsx"
-        var contador= 0
 
         try {
             val archivoExcel = WorkbookFactory.create(FileInputStream(filePath))
@@ -60,10 +59,7 @@ open class IssueXLSXDAO : IssueDAO {
                     tipoDeTrabajo, mes, llave, tiempoEmpleadoEnHoras
                 )
                 issue.add(issueExcel)
-                contador++
             }
-
-            println("jira excel: $contador")
             archivoExcel.close()
 
         } catch (e: Exception) {
@@ -80,22 +76,23 @@ open class IssueXLSXDAO : IssueDAO {
         val sheet = workbook.createSheet("DATA")
 
         generarCabecera(sheet)
-        generarCuerpo(sheet, jira)
+        generarCuerpo(sheet,jira)
 
         try {
-            FileOutputStream("D:\\PullRequest\\Jira.xlsx").use { outputStream ->
+            FileOutputStream("D:\\PullRequestIssue\\Issue.xlsx").use { outputStream ->
                 workbook.write(outputStream)
             }
         } catch (e: Exception) {
-          println("Error: $e")
+            println("Error: $e")
         }
     }
+
 
     fun importarXLSConsolidado(): List<Issue> {
         val issueXLSX = mutableListOf<Issue>()
 
         try {
-            val rutaDelArchivo = FileInputStream("D:\\PullRequest\\Jira.xlsx")
+            val rutaDelArchivo = FileInputStream("D:\\PullRequestIssue\\Issue.xlsx")
             val workbook = WorkbookFactory.create(rutaDelArchivo)
             val sheet = workbook.getSheetAt(0)
 
@@ -104,7 +101,7 @@ open class IssueXLSXDAO : IssueDAO {
                 val nombreHistoria = row.getCell(1)?.stringCellValue ?: ""
                 val estado = row.getCell(2)?.stringCellValue ?: ""
                 val fechaTerminado = row.getCell(3)?.stringCellValue ?: ""
-                val email = row.getCell(4)?.stringCellValue ?: ""
+
                 val issue = Issue(
                     Resumen = "",
                     Clave = "",
@@ -120,7 +117,7 @@ open class IssueXLSXDAO : IssueDAO {
                     TiempoEmpleado = 0,
                     FechaEnProgreso = "",
                     FechaTerminado = fechaTerminado,
-                    Email = email,
+                    Email = "",
                     RegistrarHorasDeTrabajoStarted = 0,
                     RegistrarHorasTrabajotimeSpentSeconds = 0,
                     RegistrarHorasTrabajoauthorEmail = "",
@@ -147,18 +144,19 @@ open class IssueXLSXDAO : IssueDAO {
         headerRow.createCell(0).setCellValue("Nombre de Historia")
         headerRow.createCell(1).setCellValue("Estado")
         headerRow.createCell(2).setCellValue("Fecha Terminado")
-        headerRow.createCell(3).setCellValue("Email")
     }
 
     fun generarCuerpo(sheet: XSSFSheet, Issues: List<Issue>) {
-        var rowNum = 1
+        val nombresHistorias = HashSet<String>()
 
-        for (issue in Issues ) {
-            val row = sheet.createRow(rowNum++)
-            row.createCell(0).setCellValue(issue.NombreHistoria)
-            row.createCell(1).setCellValue(issue.Estado)
-            row.createCell(2).setCellValue(issue.FechaTerminado)
-            row.createCell(3).setCellValue(issue.Email)
+        for (issue in Issues) {
+            if (!nombresHistorias.contains(issue.NombreHistoria)) {
+                val row = sheet.createRow(sheet.physicalNumberOfRows)
+                row.createCell(0).setCellValue(issue.NombreHistoria)
+                row.createCell(1).setCellValue(issue.Estado)
+                row.createCell(2).setCellValue(issue.FechaTerminado)
+                nombresHistorias.add(issue.NombreHistoria)
+            }
         }
     }
 

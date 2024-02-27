@@ -1,6 +1,6 @@
 package PullRequestCSV.Model
 
-data class CsvPullRequest(
+data class PullRequests(
     val Username: String,
     val Email: String,
     val Repository: String,
@@ -14,5 +14,5 @@ data class CsvPullRequest(
     val PRClosed: String,
     val Id: Int,
     val PRReviewers: Int,
-    val Origen: String
+    val FechaDeArchivo: String
 )

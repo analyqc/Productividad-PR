@@ -1,0 +1,26 @@
+package Jira.Model
+
+data class Issue(
+    val Resumen: String,
+    val Clave: String,
+    val Id: Int,
+    val NombreHistoria: String,
+    val TipoIncidencia: String,
+    val Estado: String,
+    val ProyectoKey: String,
+    val Proyecto: String,
+    val Responsable: String,
+    val ResponsableAccountId: String,
+    val EstimacionOriginal: Int,
+    val TiempoEmpleado: Int,
+    val FechaEnProgreso: String,
+    val FechaTerminado: String,
+    val Email: String,
+    val RegistrarHorasDeTrabajoStarted: Int,
+    val RegistrarHorasTrabajotimeSpentSeconds: Int,
+    val RegistrarHorasTrabajoauthorEmail: String,
+    val TipoDeTrabajo: String,
+    val Mes: String,
+    val Llave: String,
+    val TiempoEmpleadoEnHoras: Double,
+)

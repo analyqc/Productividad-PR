@@ -1,7 +1,7 @@
 package PullRequestCSV.DAO
 
-import PullRequestCSV.Model.CsvPullRequest
+import PullRequestCSV.Model.PullRequests
 
 interface PullRequestDAO {
-        fun getPullRequests(): List<CsvPullRequest>
+        fun getPullRequests(): List<PullRequests>
 }

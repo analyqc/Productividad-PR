@@ -1,6 +1,6 @@
-package Jira.DAO
+package IssueXLSX.DAO
 
-import Jira.Model.Issue
+import IssueXLSX.Model.Issue
 interface IssueDAO {
         fun getIssue(): List<Issue>
 }

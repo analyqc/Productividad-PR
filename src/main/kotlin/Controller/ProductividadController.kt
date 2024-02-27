@@ -1,7 +1,7 @@
 package Controller
 
-import Jira.DAO.implement.IssueXLSXDAO
-import Jira.Model.Issue
+import IssueXLSX.DAO.implement.IssueXLSXDAO
+import IssueXLSX.Model.Issue
 
 class ProductividadController( private val jiraDAO : IssueXLSXDAO) {
     fun exportMetricas(): List<Issue> {
@@ -11,7 +11,7 @@ class ProductividadController( private val jiraDAO : IssueXLSXDAO) {
 
         //TODO 2 exportar consolidado JIRA
 
-        val consolidadoJira=jiraDAO.getJira()
+        val consolidadoJira=jiraDAO.getIssue()
 
         //TODO 3 Filtrar PR (PullRequest) E Issues (JIRA)
         //TODO 4 Combinar listado de PR e Issues

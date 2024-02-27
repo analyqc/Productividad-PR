@@ -1,4 +1,4 @@
-package Jira.Model
+package IssueXLSX.Model
 
 data class Issue(
     val Resumen: String,

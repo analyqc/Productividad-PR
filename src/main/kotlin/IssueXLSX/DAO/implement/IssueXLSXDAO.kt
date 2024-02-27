@@ -1,7 +1,7 @@
-package Jira.DAO.implement
+package IssueXLSX.DAO.implement
 
-import Jira.DAO.IssueDAO
-import Jira.Model.Issue
+import IssueXLSX.DAO.IssueDAO
+import IssueXLSX.Model.Issue
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -87,12 +87,12 @@ open class IssueXLSXDAO : IssueDAO {
                 workbook.write(outputStream)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+          println("Error: $e")
         }
     }
 
     fun importarXLSConsolidado(): List<Issue> {
-        val jiraXLS = mutableListOf<Issue>()
+        val issueXLSX = mutableListOf<Issue>()
 
         try {
             val rutaDelArchivo = FileInputStream("D:\\PullRequest\\Jira.xlsx")
@@ -105,8 +105,8 @@ open class IssueXLSXDAO : IssueDAO {
                 val estado = row.getCell(2)?.stringCellValue ?: ""
                 val fechaTerminado = row.getCell(3)?.stringCellValue ?: ""
                 val email = row.getCell(4)?.stringCellValue ?: ""
-                val csvJira = Issue(
-                    Resumen = "", // Puedes pasar valores por defecto para los campos no utilizados
+                val issue = Issue(
+                    Resumen = "",
                     Clave = "",
                     Id = 0,
                     NombreHistoria = nombreHistoria,
@@ -129,16 +129,17 @@ open class IssueXLSXDAO : IssueDAO {
                     Llave = "",
                     TiempoEmpleadoEnHoras = 0.0
                 )
-                jiraXLS.add(csvJira)
+                issueXLSX.add(issue)
             }
 
             workbook.close()
             rutaDelArchivo.close()
+
         } catch (e: Exception) {
-            e.printStackTrace()
+            println("Error: $e")
         }
 
-        return jiraXLS
+        return issueXLSX
     }
 
     fun generarCabecera(sheet: XSSFSheet) {
@@ -149,15 +150,15 @@ open class IssueXLSXDAO : IssueDAO {
         headerRow.createCell(3).setCellValue("Email")
     }
 
-    fun generarCuerpo(sheet: XSSFSheet, jiras: List<Issue>) {
+    fun generarCuerpo(sheet: XSSFSheet, Issues: List<Issue>) {
         var rowNum = 1
 
-        for (jira in jiras) {
+        for (issue in Issues ) {
             val row = sheet.createRow(rowNum++)
-            row.createCell(0).setCellValue(jira.NombreHistoria)
-            row.createCell(1).setCellValue(jira.Estado)
-            row.createCell(2).setCellValue(jira.FechaTerminado)
-            row.createCell(3).setCellValue(jira.Email)
+            row.createCell(0).setCellValue(issue.NombreHistoria)
+            row.createCell(1).setCellValue(issue.Estado)
+            row.createCell(2).setCellValue(issue.FechaTerminado)
+            row.createCell(3).setCellValue(issue.Email)
         }
     }
 
@@ -178,7 +179,7 @@ open class IssueXLSXDAO : IssueDAO {
     }
 
     fun getValueNumeric(fila: Row, posicion:Int):Int{
-        return fila.getCell(15).numericCellValue.toInt()
+        return fila.getCell(posicion).numericCellValue.toInt()
     }
 
     fun getValueDouble(fila: Row, posicion:Int):Double{

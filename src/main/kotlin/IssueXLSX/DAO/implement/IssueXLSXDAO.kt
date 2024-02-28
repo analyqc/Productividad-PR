@@ -4,11 +4,14 @@ import IssueXLSX.DAO.IssueDAO
 import IssueXLSX.Model.Issue
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 open class IssueXLSXDAO : IssueDAO {
 
@@ -89,54 +92,22 @@ open class IssueXLSXDAO : IssueDAO {
 
 
     fun importarXLSConsolidado(): List<Issue> {
-        val issueXLSX = mutableListOf<Issue>()
+        val jiraXLS = mutableListOf<Issue>()
 
         try {
             val rutaDelArchivo = FileInputStream("D:\\PullRequestIssue\\Issue.xlsx")
             val workbook = WorkbookFactory.create(rutaDelArchivo)
             val sheet = workbook.getSheetAt(0)
 
-            for (rowNum in 1 until sheet.physicalNumberOfRows) {
-                val row = sheet.getRow(rowNum)
-                val nombreHistoria = row.getCell(1)?.stringCellValue ?: ""
-                val estado = row.getCell(2)?.stringCellValue ?: ""
-                val fechaTerminado = row.getCell(3)?.stringCellValue ?: ""
-
-                val issue = Issue(
-                    Resumen = "",
-                    Clave = "",
-                    Id = 0,
-                    NombreHistoria = nombreHistoria,
-                    TipoIncidencia = "",
-                    Estado = estado,
-                    ProyectoKey = "",
-                    Proyecto = "",
-                    Responsable = "",
-                    ResponsableAccountId = "",
-                    EstimacionOriginal = 0,
-                    TiempoEmpleado = 0,
-                    FechaEnProgreso = "",
-                    FechaTerminado = fechaTerminado,
-                    Email = "",
-                    RegistrarHorasDeTrabajoStarted = 0,
-                    RegistrarHorasTrabajotimeSpentSeconds = 0,
-                    RegistrarHorasTrabajoauthorEmail = "",
-                    TipoDeTrabajo = "",
-                    Mes = "",
-                    Llave = "",
-                    TiempoEmpleadoEnHoras = 0.0
-                )
-                issueXLSX.add(issue)
-            }
+            leerColumnas(sheet,jiraXLS)
 
             workbook.close()
             rutaDelArchivo.close()
-
         } catch (e: Exception) {
-            println("Error: $e")
+            e.printStackTrace()
         }
 
-        return issueXLSX
+        return jiraXLS
     }
 
     fun generarCabecera(sheet: XSSFSheet) {
@@ -150,14 +121,73 @@ open class IssueXLSXDAO : IssueDAO {
         val nombresHistorias = HashSet<String>()
 
         for (issue in Issues) {
-            if (!nombresHistorias.contains(issue.NombreHistoria)) {
+            //TODO 1. Eliminar correo de Excel de Jira.xlsx (Que ya no lo exporte)
+            //TODO 2. Eliminar duplicados por nombres de historia antes de exportar el excel de Jira.xlsx
+            //TODO 4. antes de exportar el excel filtrar las historias de usuario que hayan terminado en Enero Jira.xlsx
+            if (!nombresHistorias.contains(issue.NombreHistoria) && fechaEnero(issue.FechaTerminado)) {
                 val row = sheet.createRow(sheet.physicalNumberOfRows)
                 row.createCell(0).setCellValue(issue.NombreHistoria)
                 row.createCell(1).setCellValue(issue.Estado)
-                row.createCell(2).setCellValue(issue.FechaTerminado)
+                row.createCell(2).setCellValue(formatearFecha(issue.FechaTerminado))
                 nombresHistorias.add(issue.NombreHistoria)
             }
         }
+    }
+
+    fun leerColumnas(sheet: Sheet, jiraXLS: MutableList<Issue> ){
+        for (rowNum in 1 until sheet.physicalNumberOfRows) {
+            val row = sheet.getRow(rowNum)
+            val nombreHistoria = row.getCell(0)?.stringCellValue ?: ""
+            val estado = row.getCell(1)?.stringCellValue ?: ""
+            val fechaTerminado = row.getCell(2)?.stringCellValue ?: ""
+            val email = row.getCell(3)?.stringCellValue ?: ""
+            val csvJira = Issue(
+                Resumen = "",
+                Clave = "",
+                Id = 0,
+                NombreHistoria = nombreHistoria,
+                TipoIncidencia = "",
+                Estado = estado,
+                ProyectoKey = "",
+                Proyecto = "",
+                Responsable = "",
+                ResponsableAccountId = "",
+                EstimacionOriginal = 0,
+                TiempoEmpleado = 0,
+                FechaEnProgreso = "",
+                FechaTerminado = fechaTerminado,
+                Email = email,
+                RegistrarHorasDeTrabajoStarted = 0,
+                RegistrarHorasTrabajotimeSpentSeconds = 0,
+                RegistrarHorasTrabajoauthorEmail = "",
+                TipoDeTrabajo = "",
+                Mes = "",
+                Llave = "",
+                TiempoEmpleadoEnHoras = 0.0
+            )
+            jiraXLS.add(csvJira)
+
+        }
+    }
+
+    fun formatearFecha(fecha: String): String {
+        if (fecha.isBlank()) {
+            return ""
+        }
+        val formatoEntrada = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+        val formatoSalida = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+
+        val fechaLocal = LocalDateTime.parse(fecha, formatoEntrada)
+        return fechaLocal.format(formatoSalida)
+    }
+
+    fun fechaEnero(fecha: String): Boolean {
+        if (fecha.isBlank()) {
+            return false
+        }
+        val formatoEntrada = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+        val fechaLocal = LocalDateTime.parse(fecha, formatoEntrada)
+        return fechaLocal.monthValue == 1
     }
 
     fun getValueString(fila: Row, posicion:Int): String {

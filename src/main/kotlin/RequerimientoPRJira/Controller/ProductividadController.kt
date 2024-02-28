@@ -1,9 +1,7 @@
 package RequerimientoPRJira.Controller
 
 import IssueXLSX.DAO.implement.IssueXLSXDAO
-import IssueXLSX.Model.Issue
 import PullRequestCSV.DAO.PullRequestDAO
-import PullRequestCSV.Model.PullRequests
 import RequerimientoPRJira.DAO.ProductividadDAO
 
 class ProductividadController(private val pullRequestDAO: PullRequestDAO, private val issueDAO : IssueXLSXDAO, private val productividadDAO: ProductividadDAO) {

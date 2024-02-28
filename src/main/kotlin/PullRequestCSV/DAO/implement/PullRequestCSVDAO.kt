@@ -9,7 +9,9 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 open class PullRequestCSVDAO: PullRequestDAO {
 
@@ -36,34 +38,40 @@ open class PullRequestCSVDAO: PullRequestDAO {
         for (rutaDePullRequest in rutasDePullRequestsCSV) {
             val archivoCSV = File(rutaDePullRequest)
 
-            val fechaArchivo =convertirOrigenAFecha(archivoCSV)
+            val fechaArchivo = convertirOrigenAFecha(archivoCSV)
 
             archivoCSV.bufferedReader().useLines { lines ->
                 lines.drop(1)
                     .forEach { line ->
                         val tokens = line.split(",")
-                        val pullRequests = PullRequests(
-                            Username = tokens[0],
-                            Email = tokens[1],
-                            Repository = tokens[2],
-                            Branch = tokens[3],
-                            UserStory = tokens[4],
-                            PRNumber = tokens[5].toIntOrNull() ?: 0,
-                            PRTitle = tokens[6],
-                            PRState = tokens[7],
-                            PRCreated = tokens[8],
-                            PRMerged = tokens[9],
-                            PRClosed = tokens[10],
-                            Id = tokens[11].toIntOrNull() ?: 0,
-                            PRReviewers = tokens[12].toIntOrNull() ?: 0,
-                            FechaDeArchivo = fechaArchivo
-                        )
-                        pullrequests.add(pullRequests)
+
+                        //TODO 5. antes de exportar de pullrequest que la fecha de merge no sea vacio y exportar
+                        val prMerged = tokens[9]
+                        if (prMerged.isNotBlank()) {
+                            val pullRequests = PullRequests(
+                                Username = tokens[0],
+                                Email = tokens[1],
+                                Repository = tokens[2],
+                                Branch = tokens[3],
+                                UserStory = tokens[4],
+                                PRNumber = tokens[5].toIntOrNull() ?: 0,
+                                PRTitle = tokens[6],
+                                PRState = tokens[7],
+                                PRCreated = tokens[8],
+                                PRMerged = prMerged,
+                                PRClosed = tokens[10],
+                                Id = tokens[11].toIntOrNull() ?: 0,
+                                PRReviewers = tokens[12].toIntOrNull() ?: 0,
+                                FechaDeArchivo = fechaArchivo
+                            )
+                            pullrequests.add(pullRequests)
+                        }
                     }
             }
         }
         return pullrequests
     }
+
     fun ConsolidarCSV() {
 
         val pullrequests = leerPullRequestDeCSV()
@@ -170,11 +178,29 @@ open class PullRequestCSVDAO: PullRequestDAO {
             row.createCell(6).setCellValue(pullrequest.PRTitle)
             row.createCell(7).setCellValue(pullrequest.PRState)
             row.createCell(8).setCellValue(pullrequest.PRCreated)
-            row.createCell(9).setCellValue(pullrequest.PRMerged)
+            row.createCell(9).setCellValue(formatearFechaHora(pullrequest.PRMerged))
             row.createCell(10).setCellValue(pullrequest.PRClosed)
             row.createCell(11).setCellValue(pullrequest.Id.toDouble())
             row.createCell(12).setCellValue(pullrequest.PRReviewers.toDouble())
             row.createCell(13).setCellValue(pullrequest.FechaDeArchivo)
         }
+    }
+
+    fun formatearFechaHora(fechaHora: String): String {
+        val formatosEntrada = listOf(
+            DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss"),
+            DateTimeFormatter.ofPattern("M/dd/yyyy HH:mm"),
+            DateTimeFormatter.ofPattern("d/MM/yyyy HH:mm")
+        )
+        val formatoSalida = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+        for (formato in formatosEntrada) {
+            try {
+                val fechaHoraLocal = LocalDateTime.parse(fechaHora, formato)
+                return fechaHoraLocal.format(formatoSalida)
+            } catch (e: DateTimeParseException) {
+            }
+        }
+        return fechaHora
     }
 }

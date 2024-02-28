@@ -28,41 +28,7 @@ open class IssueXLSXDAO : IssueDAO {
             val archivoExcel = WorkbookFactory.create(FileInputStream(filePath))
             val hoja = archivoExcel.getSheetAt(0)
 
-            for (filaExcel in 1 until hoja.physicalNumberOfRows) {
-                val fila = hoja.getRow(filaExcel)
-
-                val resumen = getValueString(fila, 0)
-                val clave = getValueString(fila, 1)
-                val id = getValueId(fila,2)
-                val padre = getValueString(fila, 3)
-                val tipoIncidencia = getValueString(fila, 4)
-                val estado = getValueString(fila, 5)
-                val proyectoKey = getValueString(fila, 6)
-                val proyecto = getValueString(fila, 7)
-                val responsable = getValueString(fila, 8)
-                val responsableAccountId = getValueString(fila, 9)
-                val estimacionOriginal = getValueDate(fila,10)
-                val tiempoEmpleado = getValueDate(fila,11)
-                val fechaEnProgreso = getValueDateTime(fila,12)
-                val fechaEnTerminado = getValueDateTime(fila,13)
-                val responsableEmailAddress = getValueString(fila, 14)
-                val registrarHorasDeTrabajoStarted = getValueNumeric(fila,15)
-                val registrarHorasTrabajotimeSpentSeconds =getValueNumeric(fila,16)
-                val registrarHorasTrabajoauthorEmail = getValueString(fila, 17)
-                val tipoDeTrabajo = getValueString(fila, 18)
-                val mes = getValueString(fila, 19)
-                val llave = getValueString(fila, 20)
-                val tiempoEmpleadoEnHoras = getValueDouble(fila,21)
-
-                val issueExcel = Issue(
-                    resumen, clave, id, padre, tipoIncidencia, estado, proyectoKey, proyecto,
-                    responsable, responsableAccountId, estimacionOriginal, tiempoEmpleado, fechaEnProgreso,
-                    fechaEnTerminado, responsableEmailAddress, registrarHorasDeTrabajoStarted,
-                    registrarHorasTrabajotimeSpentSeconds, registrarHorasTrabajoauthorEmail,
-                    tipoDeTrabajo, mes, llave, tiempoEmpleadoEnHoras
-                )
-                issue.add(issueExcel)
-            }
+            leerColumnasExcel(hoja,issue)
             archivoExcel.close()
 
         } catch (e: Exception) {
@@ -99,7 +65,7 @@ open class IssueXLSXDAO : IssueDAO {
             val workbook = WorkbookFactory.create(rutaDelArchivo)
             val sheet = workbook.getSheetAt(0)
 
-            leerColumnas(sheet,jiraXLS)
+            leerColumnasImportarXLSX(sheet,jiraXLS)
 
             workbook.close()
             rutaDelArchivo.close()
@@ -134,7 +100,45 @@ open class IssueXLSXDAO : IssueDAO {
         }
     }
 
-    fun leerColumnas(sheet: Sheet, jiraXLS: MutableList<Issue> ){
+    fun leerColumnasExcel(hoja: Sheet, issue: MutableList<Issue>){
+        for (filaExcel in 1 until hoja.physicalNumberOfRows) {
+            val fila = hoja.getRow(filaExcel)
+
+            val resumen = getValueString(fila, 0)
+            val clave = getValueString(fila, 1)
+            val id = getValueId(fila,2)
+            val padre = getValueString(fila, 3)
+            val tipoIncidencia = getValueString(fila, 4)
+            val estado = getValueString(fila, 5)
+            val proyectoKey = getValueString(fila, 6)
+            val proyecto = getValueString(fila, 7)
+            val responsable = getValueString(fila, 8)
+            val responsableAccountId = getValueString(fila, 9)
+            val estimacionOriginal = getValueDate(fila,10)
+            val tiempoEmpleado = getValueDate(fila,11)
+            val fechaEnProgreso = getValueDateTime(fila,12)
+            val fechaEnTerminado = getValueDateTime(fila,13)
+            val responsableEmailAddress = getValueString(fila, 14)
+            val registrarHorasDeTrabajoStarted = getValueNumeric(fila,15)
+            val registrarHorasTrabajotimeSpentSeconds =getValueNumeric(fila,16)
+            val registrarHorasTrabajoauthorEmail = getValueString(fila, 17)
+            val tipoDeTrabajo = getValueString(fila, 18)
+            val mes = getValueString(fila, 19)
+            val llave = getValueString(fila, 20)
+            val tiempoEmpleadoEnHoras = getValueDouble(fila,21)
+
+            val issueExcel = Issue(
+                resumen, clave, id, padre, tipoIncidencia, estado, proyectoKey, proyecto,
+                responsable, responsableAccountId, estimacionOriginal, tiempoEmpleado, fechaEnProgreso,
+                fechaEnTerminado, responsableEmailAddress, registrarHorasDeTrabajoStarted,
+                registrarHorasTrabajotimeSpentSeconds, registrarHorasTrabajoauthorEmail,
+                tipoDeTrabajo, mes, llave, tiempoEmpleadoEnHoras
+            )
+            issue.add(issueExcel)
+        }
+    }
+
+    fun leerColumnasImportarXLSX(sheet: Sheet, jiraXLS: MutableList<Issue> ){
         for (rowNum in 1 until sheet.physicalNumberOfRows) {
             val row = sheet.getRow(rowNum)
             val nombreHistoria = row.getCell(0)?.stringCellValue ?: ""

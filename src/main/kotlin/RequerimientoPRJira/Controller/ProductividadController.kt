@@ -13,9 +13,6 @@ class ProductividadController(private val pullRequestDAO: PullRequestDAO, privat
         val consolidadoJira=issueDAO.getIssue()
 
         //TODO 3 Filtrar PR (PullRequest) E Issues (JIRA)
-//        val pullRequestsFiltrados = productividadDAO.filtrarPullRequests(consolidadoPullRequest)
-//        val issuesFiltrados = productividadDAO.filtrarIssuesJira(consolidadoJira)
-
         //TODO 4 Combinar listado de PR e Issues
         val unificados =productividadDAO.combinarListadoPRIssue(consolidadoPullRequest,consolidadoJira)
 

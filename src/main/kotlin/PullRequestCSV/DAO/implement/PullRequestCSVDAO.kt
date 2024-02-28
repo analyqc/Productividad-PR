@@ -44,8 +44,6 @@ open class PullRequestCSVDAO: PullRequestDAO {
                 lines.drop(1)
                     .forEach { line ->
                         val tokens = line.split(",")
-
-                        //TODO 5. antes de exportar de pullrequest que la fecha de merge no sea vacio y exportar
                         val prMerged = tokens[9]
                         if (prMerged.isNotBlank()) {
                             val pullRequests = PullRequests(

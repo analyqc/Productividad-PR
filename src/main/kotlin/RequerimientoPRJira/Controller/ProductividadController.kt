@@ -4,9 +4,12 @@ import IssueXLSX.DAO.implement.IssueXLSXDAO
 import PullRequestCSV.DAO.PullRequestDAO
 import RequerimientoPRJira.DAO.ProductividadDAO
 
-class ProductividadController(private val pullRequestDAO: PullRequestDAO, private val issueDAO : IssueXLSXDAO, private val productividadDAO: ProductividadDAO) {
+class ProductividadController(
+    private val pullRequestDAO: PullRequestDAO,
+    private val issueDAO : IssueXLSXDAO,
+    private val productividadDAO: ProductividadDAO,
+) {
     fun exportMetricas(){
-
         //TODO 1 exportar consolidado PullRequest
         val consolidadoPullRequest=pullRequestDAO.getPullRequests()
         //TODO 2 exportar consolidado JIRA
@@ -17,7 +20,8 @@ class ProductividadController(private val pullRequestDAO: PullRequestDAO, privat
         val unificados =productividadDAO.combinarListadoPRIssue(consolidadoPullRequest,consolidadoJira)
 
         //TODO 5 Calcular métrica PR/HU
-
+        //val metricaPRHU = MetricaPRHU().calcularMetricaPRHU(unificados, consolidadoJira)
+        //unificados devolver archivo excel y consolidado Jira agarrar sus datos
 
         //TODO 6 Calcular métrica Revisiones/PR
         //TODO 7 Exportar métricas

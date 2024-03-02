@@ -3,36 +3,17 @@ package RequerimientoPRJira.DAO
 import IssueXLSX.Model.Issue
 import PullRequestCSV.Model.PullRequests
 import RequerimientoPRJira.Model.MetricaUnificada
+import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileOutputStream
 
-class ProductividadDAO {
+class ProductividadService {
     fun combinarListadoPRIssue(pullRequests: List<PullRequests>, issues: List<Issue>) {
-        val repeticionesPorFila = contarRepeticionesPorFila(pullRequests)
-        val metricasUnificadas = filtrarYEliminarDuplicados(pullRequests)
-        generarArchivoUnificado(metricasUnificadas, repeticionesPorFila,issues)
+        val metricasUnificadas = agruparPorCorreoYHU(pullRequests)
+        generarArchivoUnificado(metricasUnificadas,issues)
     }
 
-    private fun contarRepeticionesPorFila(pullRequests: List<PullRequests>): Map<Pair<String, String>, Int> {
-        val repeticionesPorFila = mutableMapOf<Pair<String, String>, Int>()
-
-        for (pullRequest in pullRequests) {
-            val userStory = pullRequest.UserStory
-            val correoPR = pullRequest.Email
-            val combinacion = Pair(correoPR, userStory)
-
-            if (!repeticionesPorFila.contains(combinacion)) {
-                repeticionesPorFila[combinacion] = 1
-            } else {
-                val repeticion = repeticionesPorFila[combinacion] ?: 0
-                repeticionesPorFila[combinacion] = repeticion + 1
-            }
-        }
-
-        return repeticionesPorFila
-    }
-
-    private fun filtrarYEliminarDuplicados(pullRequests: List<PullRequests>): List<MetricaUnificada> {
+    private fun agruparPorCorreoYHU(pullRequests: List<PullRequests>): List<MetricaUnificada> {
         val repeticionesPorFila = mutableMapOf<Pair<String, String>, Int>()
 
         for (pullRequest in pullRequests) {
@@ -60,17 +41,36 @@ class ProductividadDAO {
         return filteredData
     }
 
+    /*Logica de generar arhicvo separado de contar, validar filtrar, combinar, generar campo, validar si existe
+
+ requerimientoMetrica1HUPR(sheetMetrica1,metricas,repeticionesPorFila,issues)
+requerimientoMetrica2HUPR(sheetMetrica2,metricas)
+ modificar, solo se espera que reciba Metricas para imprimir
 
 
-    //consumire a  metricas y a lista de pull requtest
+Nombre de funcion requerimientoMetrica1HUPR y requerimientoMetrica2HUPR cambiar nombre
+*/
     private fun generarArchivoUnificado(
         metricas: List<MetricaUnificada>,
-        repeticionesPorFila: Map<Pair<String, String>, Int>,
         issues: List<Issue>
     ) {
         val workbook = XSSFWorkbook()
-        val sheet = workbook.createSheet("Unificado")
+        val sheetMetrica1 = workbook.createSheet("Metrica1HUPR")
+        val sheetMetrica2 = workbook.createSheet("Metrica2HUCtdRevisiones")
 
+        requerimientoMetrica1HUPR(sheetMetrica1,metricas,issues)
+        requerimientoMetrica2HUPR(sheetMetrica2,metricas)
+
+        FileOutputStream("D:\\PullRequestIssue\\Archivo_unificado.xlsx").use { outputStream ->
+            (workbook).write(outputStream)
+        }
+    }
+
+    fun requerimientoMetrica1HUPR(
+        sheet: XSSFSheet,
+        metricas: List<MetricaUnificada>,
+        issues: List<Issue>)
+    {
         val headerRow = sheet.createRow(0)
         headerRow.createCell(0).setCellValue("Correo PR")
         headerRow.createCell(1).setCellValue("Nombre de Historia")
@@ -81,25 +81,43 @@ class ProductividadDAO {
 
         for (metrica in metricas) {
             val row = sheet.createRow(rowNum++)
-            val combinacion = Pair(metrica.correoPr, metrica.nombreHistoriaMetrica)
-            val repeticiones = repeticionesPorFila[combinacion] ?: 0
 
             row.createCell(0).setCellValue(metrica.correoPr)
             row.createCell(1).setCellValue(metrica.nombreHistoriaMetrica)
-            row.createCell(2).setCellValue(repeticiones.toDouble())
+            row.createCell(2).setCellValue(metrica.repeticiones.toDouble())
+
 
             val existeEnIssues = issues.any { it.NombreHistoria == metrica.nombreHistoriaMetrica }
             val espaciosEnBlancoMetrica = metrica.nombreHistoriaMetrica.isNotBlank()
 
             val confirmacion = when {
-                existeEnIssues && espaciosEnBlancoMetrica -> "Si existe"
-                else -> "No"
+                existeEnIssues && espaciosEnBlancoMetrica -> "SI"
+                else -> "NO"
             }
             row.createCell(3).setCellValue(confirmacion)
         }
+    }
 
-        FileOutputStream("D:\\PullRequestIssue\\Archivo_unificado.xlsx").use { outputStream ->
-            workbook.write(outputStream)
+    private fun requerimientoMetrica2HUPR (
+        sheet: XSSFSheet,
+        metricas: List<MetricaUnificada>
+    ) {
+        val headerRow = sheet.createRow(0)
+        headerRow.createCell(0).setCellValue("Correo PR")
+        headerRow.createCell(1).setCellValue("Cantidad promedio PR")
+
+        val correos = metricas.map { it.correoPr }.distinct()
+
+        var rowNum = 1
+        for (correo in correos) {
+            val row = sheet.createRow(rowNum++)
+
+            row.createCell(0).setCellValue(correo)
+            val repeticiones = metricas.filter { it.correoPr == correo }.sumOf { it.repeticiones } //aqui sumo todas las repeticiones
+
+            val cantidadRepeticiones = metricas.count { it.correoPr == correo }//aqui hago conteo de repeticion
+            val promedio = if (cantidadRepeticiones != 0) repeticiones.toDouble() / cantidadRepeticiones else 0.0
+            row.createCell(1).setCellValue(promedio)
         }
     }
 

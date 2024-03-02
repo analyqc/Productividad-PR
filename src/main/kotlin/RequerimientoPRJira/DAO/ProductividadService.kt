@@ -41,15 +41,6 @@ class ProductividadService {
         return filteredData
     }
 
-    /*Logica de generar arhicvo separado de contar, validar filtrar, combinar, generar campo, validar si existe
-
- requerimientoMetrica1HUPR(sheetMetrica1,metricas,repeticionesPorFila,issues)
-requerimientoMetrica2HUPR(sheetMetrica2,metricas)
- modificar, solo se espera que reciba Metricas para imprimir
-
-
-Nombre de funcion requerimientoMetrica1HUPR y requerimientoMetrica2HUPR cambiar nombre
-*/
     private fun generarArchivoUnificado(
         metricas: List<MetricaUnificada>,
         issues: List<Issue>
@@ -58,18 +49,20 @@ Nombre de funcion requerimientoMetrica1HUPR y requerimientoMetrica2HUPR cambiar 
         val sheetMetrica1 = workbook.createSheet("Metrica1HUPR")
         val sheetMetrica2 = workbook.createSheet("Metrica2HUCtdRevisiones")
 
-        requerimientoMetrica1HUPR(sheetMetrica1,metricas,issues)
-        requerimientoMetrica2HUPR(sheetMetrica2,metricas)
+        val estadoDeMetrica= calcularEstadoDelRequerimiento(metricas,issues)
+
+        generarInformeRequerimientoYEstado(sheetMetrica1,estadoDeMetrica)
+        generarInformePromedioRepeticionesPorCorreoPR(sheetMetrica2,metricas)
 
         FileOutputStream("D:\\PullRequestIssue\\Archivo_unificado.xlsx").use { outputStream ->
             (workbook).write(outputStream)
         }
     }
 
-    fun requerimientoMetrica1HUPR(
+    private fun generarInformeRequerimientoYEstado(
         sheet: XSSFSheet,
         metricas: List<MetricaUnificada>,
-        issues: List<Issue>)
+       )
     {
         val headerRow = sheet.createRow(0)
         headerRow.createCell(0).setCellValue("Correo PR")
@@ -81,24 +74,14 @@ Nombre de funcion requerimientoMetrica1HUPR y requerimientoMetrica2HUPR cambiar 
 
         for (metrica in metricas) {
             val row = sheet.createRow(rowNum++)
-
             row.createCell(0).setCellValue(metrica.correoPr)
             row.createCell(1).setCellValue(metrica.nombreHistoriaMetrica)
             row.createCell(2).setCellValue(metrica.repeticiones.toDouble())
-
-
-            val existeEnIssues = issues.any { it.NombreHistoria == metrica.nombreHistoriaMetrica }
-            val espaciosEnBlancoMetrica = metrica.nombreHistoriaMetrica.isNotBlank()
-
-            val confirmacion = when {
-                existeEnIssues && espaciosEnBlancoMetrica -> "SI"
-                else -> "NO"
-            }
-            row.createCell(3).setCellValue(confirmacion)
+            row.createCell(3).setCellValue((metrica.confirmacion))
         }
     }
 
-    private fun requerimientoMetrica2HUPR (
+    private fun generarInformePromedioRepeticionesPorCorreoPR (
         sheet: XSSFSheet,
         metricas: List<MetricaUnificada>
     ) {
@@ -106,19 +89,39 @@ Nombre de funcion requerimientoMetrica1HUPR y requerimientoMetrica2HUPR cambiar 
         headerRow.createCell(0).setCellValue("Correo PR")
         headerRow.createCell(1).setCellValue("Cantidad promedio PR")
 
-        val correos = metricas.map { it.correoPr }.distinct()
+        val promediosPorCorreo = calcularPromedioPorCorreo(metricas)
 
         var rowNum = 1
-        for (correo in correos) {
+        for ((correo, promedio) in promediosPorCorreo) {
             val row = sheet.createRow(rowNum++)
-
             row.createCell(0).setCellValue(correo)
-            val repeticiones = metricas.filter { it.correoPr == correo }.sumOf { it.repeticiones } //aqui sumo todas las repeticiones
-
-            val cantidadRepeticiones = metricas.count { it.correoPr == correo }//aqui hago conteo de repeticion
-            val promedio = if (cantidadRepeticiones != 0) repeticiones.toDouble() / cantidadRepeticiones else 0.0
             row.createCell(1).setCellValue(promedio)
         }
     }
 
+    private fun calcularEstadoDelRequerimiento(
+        metricas: List<MetricaUnificada>,
+        issues: List<Issue>
+    ): List<MetricaUnificada> {
+        return metricas.map { metrica ->
+            val existeEnIssues = issues.any { it.NombreHistoria == metrica.nombreHistoriaMetrica }
+            val espaciosEnBlancoMetrica = metrica.nombreHistoriaMetrica.isNotBlank()
+            val confirmacion = if (existeEnIssues && espaciosEnBlancoMetrica) "SI" else "NO"
+            metrica.copy(confirmacion = confirmacion)
+        }
+    }
+
+    private fun calcularPromedioPorCorreo(metricas: List<MetricaUnificada>): Map<String, Double> {
+        val correos = metricas.map { it.correoPr }.distinct()
+        val promediosPorCorreo = mutableMapOf<String, Double>()
+
+        for (correo in correos) {
+            val repeticiones = metricas.filter { it.correoPr == correo }.sumOf { it.repeticiones }
+            val cantidadRepeticiones = metricas.count { it.correoPr == correo }
+            val promedio = if (cantidadRepeticiones != 0) repeticiones.toDouble() / cantidadRepeticiones else 0.0
+            promediosPorCorreo[correo] = promedio
+        }
+
+        return promediosPorCorreo
+    }
 }

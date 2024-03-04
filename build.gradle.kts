@@ -18,6 +18,8 @@ dependencies {
     testImplementation ("org.mockito:mockito-inline:2.13.0")
     testImplementation("org.mockito:mockito-core:4.9.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-csv:0.20.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }
 
 tasks.test {

@@ -1,1 +1,1 @@
-Uso de excel, cucumber, IJ
+cambio minimos sin afectar
